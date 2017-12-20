@@ -1,0 +1,47 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd  
+    http://www.springframework.org/schema/context 
+    http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+    <!-- 注册调度任务 -->
+	<bean id="sysScheduler" lazy-init="false" autowire="no"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean"
+		destroy-method="destroy">
+		<property name="dataSource" ref="localDataSource" />
+		<property name="overwriteExistingJobs" value="true" />
+		<property name="startupDelay" value="30" />
+		<property name="autoStartup" value="true" />
+		<property name="jobFactory">
+			<bean class="com.sxd.lddp.core.quartz.SpringBeanJobFactory" />
+		</property>
+		<property name="triggers">
+			<list>
+				<ref bean="myJobTrigger"/>
+			</list>
+		</property>
+		<property name="applicationContextSchedulerContextKey" value="applicationContext" />
+		<property name="configLocation" value="classpath:quartz.properties" />
+	</bean>
+	
+	<bean id="myJobDetail"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="durability" value="true" />
+		<property name="requestsRecovery" value="false" />
+		<property name="jobClass" value="com.sxd.lddp.core.quartz.MyJob"/>
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="targetObject" value="myJob" />
+				<entry key="targetMethod" value="executeInternal" />
+			</map>
+		</property>
+	</bean>
+	<bean id="myJobTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="myJobDetail" />
+		<property name="misfireInstruction" value="2" />
+		<property name="cronExpression" value="0/5 * * * * ?" />
+	</bean>
+	
+</beans>
